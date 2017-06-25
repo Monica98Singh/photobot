@@ -3,7 +3,10 @@ import urllib       # importing for downloading images
 from keys import ACCESS_TOKEN
 from textblob import TextBlob   #TextBlob is imported as it provides api for NLP tasks
 from textblob.sentiments import NaiveBayesAnalyzer  #sentiment analysis
-
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
 BASE_URL = 'https://api.instagram.com/v1/'
 
@@ -263,6 +266,45 @@ def list_of_comment(insta_username):    #getting list of comment on a post
         print 'Code other than 200 received.'
 
 
+def word_cloud():   # function to create word cloud for the description of a tag
+    text = recent_tag() # get the tag description whose word cloud is to made
+    if len(text):
+        path = raw_input('Write the path of image : ')
+        # write the path of any image which is in your computer.
+        # for example: path = 'C:\\Users\\Lenovo\Desktop\\emoji.png'
+        # this image is used and word cloud is made in the shape of this image
+
+        # read the mask / color image taken from
+        coloring = np.array(Image.open(path))
+
+        wc = WordCloud(background_color="white", max_words=2000, mask=coloring,
+                    max_font_size=40, random_state=42)
+
+        # generate word cloud
+        wc.generate(text)
+
+        # create coloring from image
+        image_colors = ImageColorGenerator(coloring)
+
+        # show
+        plt.imshow(wc, interpolation="bilinear")
+        plt.axis("off")
+        plt.figure()
+
+        # recolor wordcloud and show
+        plt.imshow(wc.recolor(color_func=image_colors), interpolation="bilinear")
+        plt.axis("off")
+        plt.figure()
+
+        plt.imshow(coloring, cmap=plt.cm.gray, interpolation="bilinear")
+        plt.axis("off")
+        plt.show()
+
+    else:
+        print 'No description is there for the tag.'
+        print 'Hence no word cloud generated.'
+
+
 def del_negative_comment(insta_username):   #delete negative comments using NaiveBayesAnalyzer
     media_id = get_post_id(insta_username)
     request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, ACCESS_TOKEN)
@@ -316,12 +358,13 @@ def start_insta_bot():  #starting  our instabot
         print '12. Remove like from a post.'
         print '13. Search tag by tag name.'
         print '14. Search recent tag by tag name.'
-        print '15. Delete negative comments from instagram post.'
-        print '16. Exit Insta_Bot.'
+        print '15. Get Word Cloud for the description of a tag.'
+        print '16. Delete negative comments from instagram post.'
+        print '17. Exit Insta_Bot.'
 
         choice = int(raw_input('Enter your choice:'))
 
-        if choice != 13 or choice != 14 or choice != 16:
+        if choice != 13 and choice != 14 and choice != 15 and choice != 17:
             insta_username = raw_input('Enter the name of person whose details you want to see:')
         else:
             pass
@@ -355,8 +398,10 @@ def start_insta_bot():  #starting  our instabot
         elif choice == 14:
             recent_tag()
         elif choice == 15:
-            del_negative_comment(insta_username)
+            word_cloud()
         elif choice == 16:
+            del_negative_comment(insta_username)
+        elif choice == 17:
             print 'You decided to close application.'
             exit()
         else:
